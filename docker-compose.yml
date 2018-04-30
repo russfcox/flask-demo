@@ -1,0 +1,23 @@
+version: '3.4'
+services:
+  app:
+    image: russcox/flask-demo
+    build:
+      context: .
+      dockerfile: Dockerfile-app
+    # volumes:
+    #   - './:/usr/src/app'
+    ports:
+      - 5000:5000
+    environment:
+      - FLASK_DEBUG=1
+      - APP_SETTINGS=app.config.DevelopmentConfig
+      - FLASK_APP=app/__init__.py
+
+  nginx:
+    image: russcox/nginx
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    ports:
+      - "80:80"
