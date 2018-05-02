@@ -24,7 +24,18 @@ https://brew.sh/
 * Install docker-machine for deployment
 `brew install docker-machine`
 
-## Installing
+* Set up python env
+ * `virtualenv env ; source ./env/bin/activate`
+ * `pip install -r requirements.txt`
+
+## Local development environment
+
+* Run unit tests
+`FLASK_APP=app/__init__.py python run.py test`
+* Start app locally
+`FLASK_APP=app/__init__.py python run.py run`
+
+## Local Docker environment
 
 In order to run the local development environment
 
