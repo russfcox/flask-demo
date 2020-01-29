@@ -26,3 +26,4 @@ jobs:
           reaction-type: hooray
           body: |
             **Deploying release:** ${{ github.event.client_payload.slash_command.release }}
+            slash_command payload: ${{ github.event.client_payload.slash_command.args }}
