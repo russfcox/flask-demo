@@ -15,3 +15,6 @@ jobs:
           repository: ${{ github.event.client_payload.github.payload.repository.full_name }}
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
+          body: |
+            --
+            Deploying version "${{ github.event.client_payload.slash_command.release }}"
