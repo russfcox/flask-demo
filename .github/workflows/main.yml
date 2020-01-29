@@ -1,12 +1,15 @@
-name: Comment
-
+name: Slash Command Dispatch
 on:
   issue_comment:
     types: [created]
-
 jobs:
-  build:
+  slashCommandDispatch:
     runs-on: ubuntu-latest
     steps:
-    - name: Run a multi-line script
-      run: echo ${{ github.event.comment.body }}
+      - name: Slash Command Dispatch
+        uses: peter-evans/slash-command-dispatch@v1
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          reaction-token: ${{ secrets.GITHUB_TOKEN }} 
+          named_args: true
+          commands: deploy
