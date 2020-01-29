@@ -1,0 +1,12 @@
+name: Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run a multi-line script
+      run: echo ${{ github.event.comment.body }}
