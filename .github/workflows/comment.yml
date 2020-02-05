@@ -1,23 +1,54 @@
-name: Comment
-
-on: 
+name: slashDeploy
+on:
   repository_dispatch:
     types: [deploy-command]
-
 jobs:
-  comment:
+  slashDeploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Output command and arguments
-        run: |
-          echo ${{ github.event.client_payload.slash_command.command }}
-          echo ${{ github.event.client_payload.slash_command.args }}
-          echo ${{ github.event.client_payload.slash_command.arg1 }}
       - name: Dump the client payload context
         env:
-          PAYLOAD_CONTEXT: ${{ toJson(github.event.client_payload.slash_command) }}
+          PAYLOAD_CONTEXT: ${{ toJson(github.event.client_payload) }}
         run: echo "$PAYLOAD_CONTEXT"
-      - name: Add reaction
+      - name: Check release exists
+        id: checkRelease
+        uses: actions/github-script@0.4.0
+        env:
+          RELEASE_VERSION: ${{ github.event.client_payload.github.payload.issue.title }}
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          debug: true
+          # result-encoding: string
+          script: |
+            const tag = '${{ github.event.client_payload.github.payload.issue.title }}'
+            const error = 'No release for ${tag}';
+            const [owner, repo] = '${{github.repository}}'.split('/');
+            const releaseAssetName = `${repo}-${tag}.zip`; 
+            try {
+              const {data: release} = await github.repos.getReleaseByTag({
+                owner,
+                repo,
+                tag,
+              });
+
+              if (!release.prerelease || release.draft) {
+                throw new Error(error);
+              }
+              const releaseAsset = release.assets.filter(asset => asset.name = releaseAssetName)
+              switch (true) {
+                  case releaseAsset.length === 0:
+                      throw new Error("No release assets found");
+                      break;
+                  case releaseAsset.length > 1:
+                      throw new Error("Multiple release assets found")
+                      break;
+              }
+            return releaseAsset[0].browser_download_url;
+            } catch (err) {
+              throw new Error(err);
+            }
+
+      - name: Add Comment to Issue
         uses: peter-evans/create-or-update-comment@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -25,5 +56,13 @@ jobs:
           comment-id: ${{ github.event.client_payload.github.payload.comment.id }}
           reaction-type: hooray
           body: |
-            **Deploying release:** ${{ github.event.client_payload.slash_command.release }}
-            slash_command payload: ${{ github.event.client_payload.slash_command.args }}
+            **Deploying release:** ${{ github.event.client_payload.github.payload.issue.title }}
+      - name: Dump output from checkRelease
+        run: echo ${{steps.checkRelease.outputs.result}}
+      - name: Get Release Asset
+        run: |
+          curl -L -u username:${{secrets.GITHUB_TOKEN}} -o app.zip ${{ steps.checkRelease.outputs.result }}
+          ls -ltr
+          unzip ./app.zip
+      - name: Deploy to non-live
+        run: echo "Deploy to non-live slot here"
